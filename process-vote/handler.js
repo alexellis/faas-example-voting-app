@@ -7,7 +7,7 @@ getStdin().then((val) => {
   console.log(val);
 
   let req = JSON.parse(val);
-  handle(req,(err, res) => {
+  handle(req, (err, res) => {
     if(err) {
       return console.error(err);
     }
@@ -30,20 +30,26 @@ let handle = (args, callback) => {
 
     client.query("CREATE TABLE IF NOT EXISTS votes (id VARCHAR(255) NOT NULL UNIQUE, vote VARCHAR(255) NOT NULL)", (err, res) => {
       if(err) {
+        client.end();
         return callback(err);
       }
 
-      client.query("INSERT INTO votes (id, vote) VALUES ($1, $2)", [args.voter_id, args.vote], (err)=> {
-      
-        if(err && err.message && err.message.indexOf("duplicate key") > -1) {
-          client.query("UPDATE votes SET vote = $1 WHERE id = $2", [args.vote, args.voter_id], (err)=> {
-            return callback();
-          });
-        } else {
+      client.query("INSERT INTO votes (id, vote) VALUES ($1, $2)", [args.voter_id, args.vote], (err) => {
+        let duplicate = err && err.message && err.message.indexOf("duplicate key") > -1;
+        if(!duplicate && err) {
+          client.end();
           return callback(err);
         }
+
+        client.query("UPDATE votes SET vote = $1 WHERE id = $2", [args.vote, args.voter_id], (err) => {
+          client.end();
+          return callback(err);
+        });
+
       });
+
     });
+
   });
 };
 
