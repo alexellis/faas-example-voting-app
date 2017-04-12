@@ -10,7 +10,7 @@ var express = require('express'),
 
 io.set('transports', ['polling']);
 
-var port = process.env.PORT || 4000;
+var port = process.env.PORT || 5001;
 
 io.sockets.on('connection', function (socket) {
 

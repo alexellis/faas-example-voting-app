@@ -60,7 +60,7 @@ services:
     result:
         image: alexellis2/faas-vote-result
         ports:
-            - "5001:80"
+            - "5001:5001"
         networks:
             - functions
 
