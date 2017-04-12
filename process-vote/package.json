@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "funker": "^0.0.4",
+    "get-stdin": "^5.0.1",
     "pg": "^6.1.0"
   }
 }

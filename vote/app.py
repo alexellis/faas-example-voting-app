@@ -1,8 +1,8 @@
 import os
 import random
 import socket
+import requests
 
-import funker
 from flask import Flask, g, make_response, render_template, request
 
 option_a = os.getenv('OPTION_A', "Cats")
@@ -21,7 +21,9 @@ def hello():
 
     if request.method == 'POST':
         vote = request.form['vote']
-        funker.call("process-vote", voter_id=voter_id, vote=vote)
+        req = {"voter_id": voter_id, "vote": vote}
+        r = requests.post("http://gateway:8080/function/func_process_vote", json=req)
+        print(str(r.status_code))
 
     resp = make_response(render_template(
         'index.html',

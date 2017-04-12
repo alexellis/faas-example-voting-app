@@ -1,24 +1,86 @@
-version: "2"
-
+version: "3"
 services:
-  vote:
-    build: ./vote
-    command: python app.py
-    volumes:
-    - ./vote:/app
-    ports:
-    - "5000:80"
 
-  process-vote:
-    build: ./process-vote
-    restart: always
+# Core API services are pinned, HA is provided for functions.
+    gateway:
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+        ports:
+            - 8080:8080
+        image: functions/gateway:0.5.1
+        networks:
+            - functions
+        deploy:
+            placement:
+                constraints: [node.role == manager]
+ 
+    prometheus:
+        image: quay.io/prometheus/prometheus:latest
+        volumes:
+            - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+            - ./prometheus/alert.rules:/etc/prometheus/alert.rules
 
-  db:
-    image: postgres:9.5
+        command: "-config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000 --alertmanager.url=http://alertmanager:9093"
+        ports:
+            - 9090:9090
+        depends_on:
+            - gateway
+            - alertmanager
+        environment:
+            no_proxy: "gateway"
+        networks:
+            - functions
+        deploy:
+            placement:
+                constraints: [node.role == manager]
 
-  result:
-    build: ./result
-    volumes:
-      - ./result:/app
-    ports:
-      - "5001:80"
+    # alertmanager:
+    #     image: quay.io/prometheus/alertmanager
+    #     environment:
+    #         no_proxy: "gateway"
+    #     volumes:
+    #         - ./prometheus/alertmanager.yml:/alertmanager.yml
+    #     command:
+    #         - '-config.file=/alertmanager.yml'
+    #     networks:
+    #         - functions
+    #     ports:
+    #         - 9093:9093
+    #     deploy:
+    #         placement:
+    #             constraints: [node.role == manager]
+
+    # Voting app stack
+    vote:
+        image: alexellis2/faas-vote
+        ports:
+            - "5000:80"
+        networks:
+            - functions
+
+    process_vote:
+        labels:
+            function: "true"
+        image: alexellis2/faas-vote-process 
+        depends_on:
+            - gateway
+        networks:
+            - functions
+
+    db:
+        image: postgres:9.5
+        networks:
+            - functions
+
+    # result:
+    #     build: ./result
+    #     volumes:
+    #     - ./result:/app
+    #     ports:
+    #     - "5001:80"
+
+networks:
+    functions:
+        driver: overlay
+        # Docker does not support this option yet - maybe create outside of the stack and reference as "external"?
+        #attachable: true
