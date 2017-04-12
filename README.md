@@ -18,3 +18,6 @@ The app will be running at [http://localhost:5000](http://localhost:5000), and t
 
 The API gateway will run at [http://localhost:8080](http://localhost:8080)
 
+### History
+
+This repository is a fork of [an example](https://github.com/bfirsh/funker-example-voting-app) [Ben Firshman](https://github.com/bfirsh) put totgether while @Docker to show how his Funker framework could process votes for the Docker Voting App.
