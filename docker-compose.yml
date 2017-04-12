@@ -33,6 +33,7 @@ services:
             placement:
                 constraints: [node.role == manager]
 
+    # Un-comment this section to enable auto-scaling
     # alertmanager:
     #     image: quay.io/prometheus/alertmanager
     #     environment:
@@ -59,7 +60,7 @@ services:
     result:
         image: alexellis2/faas-vote-result
         ports:
-            - "80:80"
+            - "5001:80"
         networks:
             - functions
 
